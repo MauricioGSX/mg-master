@@ -1,0 +1,834 @@
+{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orden de Servicio</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static " css/user_base.css" %}">
+</head>
+
+<body>
+    <div class="container-fluid px-0 py-0">
+        <nav class="navbar navbar-expand-lg navbar-light bg-secondary w-100">
+            <div class="container-fluid d-flex justify-content-between align-items-center">
+                <a href="{% url 'logout' %}" class="btn btn-danger">
+                    <i class="fas fa-arrow-left"></i> Cerrar sesión
+                </a>
+
+                <div>
+                    <img src="{% static 'images/logo.png' %}" alt="Logo" style="height: 35px;" class="me-2">
+                </div>
+                <div>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <div class="ms-auto">
+                            <button class="btn btn-success" data-bs-toggle="modal"
+                                data-bs-target="#createAppointmentModal">Crear Cita</button>
+                            <button class="btn btn-primary me-2" data-bs-toggle="modal"
+                                data-bs-target="#registerVehicleModal">Registrar Vehículos</button>
+                            <a href="{% url 'profile' %}" class="btn btn-warning">Mi Perfil</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="row gx-0">
+            <main class="col-md-8 px-4 py-5">
+                <section class="mb-4">
+                    <h2>
+                        <img src="{% static 'images/profile-circle-svgrepo-com.svg' %}" alt="Icono"
+                            style="height: 50px; vertical-align: middle; margin-right: 10px;">
+                        {{ user.first_name|capfirst }} {{ user.last_name|capfirst }}
+                    </h2>
+
+                    <p class="text-muted">LISTA DE RESERVAS</p>
+                    <div class="btn-group d-none" role="group">
+                        <button type="button" class="btn btn-outline-secondary ">Reparación</button>
+                        <button type="button" class="btn btn-outline-secondary ">Mantención</button>
+                        <button type="button" class="btn btn-outline-secondary ">Garantía</button>
+                    </div>
+                </section>
+
+                <div class="container mt-5">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-light">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Servicio</th>
+                                    <th>Patente</th>
+                                    <th>Fecha de Reserva</th>
+                                    <th>Horario</th>
+                                    <th>Sucursal</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="appointmentsTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+
+            <aside class="col-md-4 sidebar px-4 py-3">
+                <h3>Vehículo</h3>
+                <div class="mb-3">
+                    <select id="vehicleSelect" onchange="updateVehicleInfo(this.value)">
+                        {% if vehicles %}
+                            {% for vehicle in vehicles %}
+                                <option value="{{ vehicle.id }}" {% if vehicle.id == default_vehicle_id %}
+                                selected{% endif %}>
+                                    {{ vehicle.plate }} - {{ vehicle.brand }} {{ vehicle.model }}
+                                </option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="" selected>No tiene vehículos registrados</option>
+                        {% endif %}
+                    </select>
+                </div>
+
+                <div class="card mb-3" id="vehicleInfo">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <img id="vehicleLogo"
+                                    src="{% if vehicles.0.brand.logo %}{% static 'images/vehicle_brand/' %}{{ vehicles.0.brand.logo }}{% else %}{% static 'images/vehicle_brand/car-svgrepo-com.svg' %}{% endif %}"
+                                    alt="Logo {{ vehicles.0.brand.name }}" class="me-2" style="height: 50px;">
+
+                                <span id="vehicleName">{{ vehicles.0.brand.name }} {{ vehicles.0.model.name }}</span>
+                                <small class="text-muted" id="vehiclePlate">{{ vehicles.0.plate }}</small>
+                            </div>
+                            <div class="ms-auto">
+                                <button class="btn btn-sm btn-outline-danger" data-bs-target="#deleteButton"
+                                    id="deleteButton">
+                                    Eliminar
+                                </button>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <h4 class="card-title">Puntos Acumulados</h4>
+                            <p id="pointsText" class="h5">{{ user_profile.accumulated_points }} Puntos</p>
+                            <div class="progress mb-3" id="pointsProgress" style="height: 20px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                    style="width: {{ points_percentage|floatformat:0 }}%;"></div>
+                            </div>
+                            <p class="text-muted">¡Canjea tus puntos por descuentos exclusivos!</p>
+                        </div>
+
+                        <div class="d-flex flex-column">
+                            <form id="redeemPointsForm" method="POST" action="{% url 'redeem_points' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="points_to_redeem" id="pointsToRedeem" value="100">
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-success mb-2" onclick="setPointsToRedeem(100)">
+                                        Canjear 100 puntos por 10% de descuento
+                                    </button>
+                                </div>
+                        </div>
+                        <div class="mt-4">
+                            <h4 class="card-title text-center">Descuentos Disponibles</h4>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>200 puntos</span>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge badge-success badge-pill mr-3">20% de descuento</span>
+                                        <button type="submit" class="btn btn-sm btn-outline-success"
+                                            onclick="setPointsToRedeem(200)">
+                                            Canjear
+                                        </button>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>300 puntos</span>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge badge-success badge-pill mr-3">30% de descuento</span>
+                                        <button type="submit" class="btn btn-sm btn-outline-success"
+                                            onclick="setPointsToRedeem(300)">
+                                            Canjear
+                                        </button>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>500 puntos</span>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge badge-success badge-pill mr-3">50% de descuento</span>
+                                        <button type="submit" class="btn btn-sm btn-outline-success"
+                                            onclick="setPointsToRedeem(500)">
+                                            Canjear
+                                        </button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        </form>
+                    </div>
+                </div>
+
+
+                <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="alertModalLabel">Notificación</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                {% if messages %}
+                                {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">
+                                    {{ message }}
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </aside>
+        </div>
+    </div>
+
+    <div class="modal fade" id="createAppointmentModal" tabindex="-1" aria-labelledby="createAppointmentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createAppointmentModalLabel">Crear Cita</h5>
+
+                </div>
+                <div class="modal-body">
+                    <form id="appointmentForm" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" id="vehicleId" name="vehicle_id" value="">
+
+                        <div class="mb-3">
+                            <label for="serviceSelect" class="form-label">Seleccionar un Servicio:</label>
+                            <select id="serviceSelect" name="service" class="form-control select2" required>
+                                <option value="">Seleccionar un servicio...</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="vehicleSelect" class="form-label">Seleccionar un Vehículo:</label>
+                            <select id="vehicleSelect" name="vehicle" class="form-select" onchange="updateVehicleId(this.value)">
+                                {% if vehicles %}
+                                    {% for vehicle in vehicles %}
+                                        <option value="{{ vehicle.id }}" 
+                                            {% if vehicle.id == default_vehicle_id %}
+                                                selected
+                                            {% endif %}
+                                        >
+                                            {{ vehicle.plate }} - {{ vehicle.brand }} {{ vehicle.model }}
+                                        </option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="" selected>No hay vehículos registrados</option>
+                                {% endif %}
+                            </select>                            
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="branchSelect" class="form-label">Seleccionar una Sucursal:</label>
+                            <select id="branchSelect" name="branch" class="form-control select2" required>
+                                <option value="">Seleccionar una sucursal...</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mechanic" class="form-label">Mecánico:</label>
+                            <select id="mechanic" name="mechanic" class="form-select" required>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="date" class="form-label">Fecha:</label>
+                            <input type="date" id="date" name="date" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="time" class="form-label">Hora:</label>
+                            <select id="time" name="time" class="form-select" required>
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Crear Cita</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="registerVehicleModal" tabindex="-1" aria-labelledby="registerVehicleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registerVehicleModalLabel">Registrar Vehículo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formRegisterVehicle">
+                        <div class="mb-3">
+                            <label for="vehicleBrand" class="form-label">Marca del Vehículo</label>
+                            <select class="form-control select2" id="vehicleBrand" required>
+                                <option value="">Seleccione una marca</option>
+                                {% for brand in brands %}
+                                <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vehicleModel" class="form-label">Modelo del Vehículo</label>
+                            <select class="form-control select2" id="vehicleModel" required>
+                                <option value="">Seleccione un modelo</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vehiclePlate" class="form-label">Placa del Vehículo</label>
+                            <input type="text" class="form-control" id="vehiclePlateRegister" maxlength="10" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vehicleYear" class="form-label">Año del Vehículo</label>
+                            <select class="form-control select2" id="vehicleYear" required>
+                                <option value="">Seleccione un año</option>
+                                {% for year in years %}
+                                <option value="{{ year.id }}">{{ year.year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vehicleColor" class="form-label">Color del Vehículo</label>
+                            <select class="form-control select2" id="vehicleColor" required>
+                                <option value="">Seleccione un color</option>
+                                {% for color in colors %}
+                                <option value="{{ color.id }}">{{ color.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="submitRegisterVehicle()">Registrar
+                        Vehículo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="worksModal" tabindex="-1" aria-labelledby="worksModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="worksModalLabel">Trabajos de la Cita</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="worksModalBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script>
+        function updateVehicleInfo(vehicleId) {
+            updateVehicleDetails(vehicleId);
+            updateAppointments(vehicleId);
+        }
+        function updateVehicleDetails(vehicleId) {
+            fetch(`/update_vehicle_info/${vehicleId}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`Error en actualización del vehículo: ${response.status} - ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const vehicleLogo = document.getElementById('vehicleLogo');
+                    const vehicleName = document.getElementById('vehicleName');
+                    const vehiclePlate = document.getElementById('vehiclePlate');
+
+                    if (data) {
+                        vehicleLogo.src = data.logo;
+                        vehicleName.textContent = data.name;
+                        vehiclePlate.textContent = data.plate;
+                    } else {
+                        vehicleLogo.src = '';
+                        vehicleName.textContent = 'No hay vehículos inscritos.';
+                        vehiclePlate.textContent = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Hubo un problema con la operación fetch:', error);
+                });
+        }
+        function updateAppointments(vehicleId) {
+            fetch(`/get_appointments/?vehicle_id=${vehicleId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`Error al obtener las citas: ${response.status} - ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tableBody = document.getElementById('appointmentsTable');
+                    tableBody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="6">No hay citas para esta patente.</td></tr>';
+                    } else {
+                        data.forEach(appointment => {
+                            if (appointment.time) {
+                                const row = `<tr>
+                                <td>${appointment.service}</td>
+                                <td>${appointment.plate}</td>
+                                <td>${appointment.date}</td>
+                                <td>${appointment.time}</td>
+                                <td>${appointment.branch}</td>
+                                <td><button class="btn btn-primary show-details" data-vehicle-id="${appointment.id}">Mostrar Detalles</button></td>
+                            </tr>`;
+                                tableBody.innerHTML += row;
+                            }
+                        });
+
+                        addDetailButtonsEventListeners();
+                    }
+                })
+                .catch(error => {
+                    console.error('Hubo un problema con la operación fetch:', error);
+                });
+        }
+
+        function addDetailButtonsEventListeners() {
+            const detailButtons = document.querySelectorAll('.show-details');
+            detailButtons.forEach(button => {
+                button.addEventListener('click', event => {
+                    const vehicleId = button.getAttribute('data-vehicle-id');
+                    updateDetailSection(vehicleId);
+                });
+            });
+        }
+
+        function updateDetailSection(appointmentId) {
+            fetch(`/get_appointment_details/?appointment_id=${appointmentId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`Error al obtener los detalles: ${response.status} - ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(appointmentDetails => {
+                    const cardContainer = document.querySelector('.card.shadow-sm.mb-4');
+                    cardContainer.innerHTML = '';
+                    const fuelProgressWidth = appointmentDetails.fuelLevel + '%';
+                    const detailsHTML = `
+                <div class="mb-3 p-3">
+                    <p id="mileageText">Kilometraje actual: ${appointmentDetails.mileage} Kms.</p>
+                    <div class="progress mb-2" id="mileageProgress">
+                        <div class="progress-bar bg-success" style="width: ${fuelProgressWidth};"></div>
+                    </div>
+                    <p id="fuelLevelText">Nivel de combustible: ${appointmentDetails.fuelLevel}%</p>
+                </div>
+                <div class="mb-3 p-3">
+                    <button class="btn btn-secondary w-100" id="viewWorksButton">Ver Trabajos</button>
+<button class="btn btn-secondary w-100 d-none" id="hiddenButton">Otras inspecciones</button>
+                </div>
+                <div class="mb-3 p-3">
+                    <h4>Inventario del vehículo</h4>
+                    <ul class="list-group">
+                        ${typeof appointmentDetails.checklist === 'object'
+                            ? (Object.entries(appointmentDetails.checklist)
+                                .filter(([_, value]) => value)  
+                                .map(([key]) => `
+                                    <li class="list-group-item">
+                                        ${key.replace(/_/g, ' ')}
+                                    </li>
+                                `).join('') ||
+                                `<li class="list-group-item">Inventario aún no ingresado</li>`)  
+                            : `<li class="list-group-item">Inventario aún no ingresado</li>`  
+                        }
+                    </ul>
+                </div>
+            `;
+                    cardContainer.innerHTML = detailsHTML;
+                    document.getElementById('viewWorksButton').addEventListener('click', () => {
+                        displayWorks(appointmentDetails.works); 
+                    });
+                })
+                .catch(error => {
+                    console.error('Hubo un problema al obtener los detalles de la cita:', error);
+                    const cardContainer = document.querySelector('.card.shadow-sm.mb-4');
+                    cardContainer.innerHTML = '<p class="text-danger">Error al cargar los detalles de la cita.</p>';
+                });
+        }
+        function displayWorks(works) {
+            const worksModalBody = document.getElementById('worksModalBody');
+            worksModalBody.innerHTML = '';
+            if (!works || works.length === 0) {
+                worksModalBody.innerHTML = '<p class="text-center">No hay trabajos disponibles para esta cita.</p>';
+            } else {
+                const table = document.createElement('table');
+                table.className = 'table table-striped'; 
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+            <tr>
+                <th>Descripción</th>
+                <th>Estado</th>
+            </tr>
+        `;
+                table.appendChild(thead);
+                const tbody = document.createElement('tbody');
+                works.forEach(work => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>${work.description}</td>
+                <td>
+                    <span class="badge ${getStatusBadgeClass(work.status)}">${work.status}</span>
+                </td>
+            `;
+                    tbody.appendChild(row); 
+                });
+
+                table.appendChild(tbody); 
+                worksModalBody.appendChild(table);
+            }
+            const worksModal = new bootstrap.Modal(document.getElementById('worksModal'));
+            worksModal.show();
+        }
+
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case "En progreso":
+                    return "bg-warning text-dark"; 
+                case "Esperando Repuestos":
+                    return "bg-info"; 
+                case "Completado":
+                    return "bg-success"; 
+                default:
+                    return "bg-secondary"; 
+            }
+        }
+        function handleVehicleSelectChange() {
+            const vehicleSelect = document.getElementById('vehicleSelect');
+            vehicleSelect.addEventListener('change', function () {
+                const vehicleId = this.value;
+                if (vehicleId) {
+                    updateVehicleInfo(vehicleId);
+                } else {
+                    clearVehicleInfo();
+                }
+            });
+        }
+        function clearVehicleInfo() {
+            document.getElementById('vehicleLogo').src = '';
+            document.getElementById('vehicleName').textContent = 'No hay vehículos inscritos.';
+            document.getElementById('vehiclePlate').textContent = '';
+            document.getElementById('appointmentsTable').innerHTML = '<tr><td colspan="6">No hay citas para esta patente.</td></tr>';
+        }
+        handleVehicleSelectChange();
+        const deleteButton = document.getElementById('deleteButton');
+        if (deleteButton) {
+            deleteButton.addEventListener('click', function () {
+                const vehicleId = document.getElementById('vehicleSelect').value;
+
+                if (!vehicleId) {
+                    console.error('No hay vehículo seleccionado para eliminar.');
+                    return;
+                }
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+                fetch(`/delete-vehicle/${vehicleId}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify({ status: true })
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                throw new Error(`HTTP Error: ${response.status} - ${text}`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        alert('Vehículo eliminado exitosamente');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error al eliminar el vehículo:', error);
+                    });
+            });
+        }
+
+        function updateVehicleId(selectedValue) {
+            document.getElementById('vehicleId').value = selectedValue; 
+        }
+
+        document.getElementById('appointmentForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const vehicleId = document.getElementById('vehicleSelect').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            const mechanicId = document.getElementById('mechanic').value;
+            const branchId = document.getElementById('branchSelect').value;
+            const serviceId = document.getElementById('serviceSelect').value;
+
+            const data = {
+                vehicle_id: vehicleId,
+                date: date,
+                time: time,
+                mechanic: mechanicId,
+                service: serviceId,
+                branch: branchId
+            };
+
+            console.log(data)
+            fetch('{% url "create_appointment" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    console.log('Estado de la respuesta:', response.status);
+                    console.log('Tipo de contenido de la respuesta:', response.headers.get('Content-Type'));
+                    return response.text();  
+                })
+                .then(text => {
+                    console.log('Texto de la respuesta:', text);  
+
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                        console.log('Respuesta en JSON:', data);
+
+                        if (data.success) {
+                            alert('Cita creada con éxito');
+                            location.reload()
+                            $('#createAppointmentModal').modal('hide');
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    } catch (error) {
+                        console.error('Error al parsear el JSON:', error);
+                        alert('Error: La respuesta del servidor no es un JSON válido.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error en la solicitud fetch:', error);
+                    alert('Hubo un problema al crear la cita.');
+                });
+        });
+        window.onload = function () {
+            const vehicleSelect = document.getElementById('vehicleSelect');
+            const defaultVehicleId = vehicleSelect.value;
+
+            if (defaultVehicleId) {
+                updateVehicleInfo(defaultVehicleId);
+            } else {
+                clearVehicleInfo();
+            }
+        };
+
+        function loadMechanics(url, selectId) {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById(selectId);
+                    select.innerHTML = '';
+                    data.mechanics.forEach(mechanic => {
+                        const option = document.createElement('option');
+                        option.value = mechanic.id;
+                        option.textContent = mechanic.name;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error cargando los mecánicos:', error);
+                });
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+            loadMechanics("{% url 'load_mechanics_json' %}", 'mechanic');
+        });
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#createAppointmentModal').on('shown.bs.modal', function (event) {
+                $('#serviceSelect').select2({
+                    dropdownParent: $('#createAppointmentModal'),
+                    width: '100%',
+                    placeholder: "Seleccionar un servicio...",
+                    allowClear: true
+                });
+
+                $('#branchSelect').select2({
+                    dropdownParent: $('#createAppointmentModal'),
+                    width: '100%',
+                    placeholder: "Seleccionar una sucursal...",
+                    allowClear: true
+                });
+
+                loadServices(); 
+                loadBranches(); 
+            });
+
+            function loadServices() {
+                $.ajax({
+                    url: "{% url 'load_services' %}",
+                    method: "GET",
+                    success: function (data) {
+                        $('#serviceSelect').empty().append('<option value="">Seleccionar un Servicio...</option>');
+                        $.each(data, function (index, service) {
+                            $('#serviceSelect').append('<option value="' + service.id + '">' + service.name + '</option>');
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error al cargar servicios:", error);
+                    }
+                });
+            }
+
+            function loadBranches() {
+                $.ajax({
+                    url: "{% url 'load_branches' %}",
+                    method: "GET",
+                    success: function (data) {
+                        $('#branchSelect').empty().append('<option value="">Seleccionar una Sucursal...</option>');
+                        $.each(data, function (index, branch) {
+                            $('#branchSelect').append('<option value="' + branch.id + '">' + branch.name + '</option>');
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error al cargar sucursales:", error);
+                    }
+                });
+            }
+        });
+
+    </script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#vehicleBrand').change(function () {
+                var brandId = $(this).val();  
+                $('#vehicleModel').empty();
+                $('#vehicleModel').append('<option value="">Seleccione un modelo</option>');
+
+                if (brandId) {
+                    $.ajax({
+                        url: '{% url "get_vehicle_models" %}',  
+                        data: {
+                            'brand_id': brandId
+                        },
+                        success: function (response) {
+                            $.each(response, function (key, model) {
+                                $('#vehicleModel').append('<option value="' + model.id + '">' + model.name + '</option>');
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        function submitRegisterVehicle() {
+            const plate = $('#vehiclePlateRegister').val();
+
+
+
+            const data = {
+                brand: $('#vehicleBrand').val(),
+                model: $('#vehicleModel').val(),
+                plate: plate, 
+                year: $('#vehicleYear').val(),
+                color: $('#vehicleColor').val(),
+                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+            };
+
+            console.log(data); 
+
+            $.ajax({
+                url: '/register-vehicle/',
+                type: 'POST',
+                data: data,
+                success: function (response) {
+                    if (response.success) {
+                        alert("Vehículo registrado correctamente.");
+                    } else {
+                        alert("Ocurrió un error al registrar el vehículo.");
+                    }
+                },
+                error: function (xhr, errmsg, err) {
+                    alert("Error en el servidor: " + errmsg);
+                }
+            });
+        }
+
+
+
+    </script>
+    <script>
+        function setPointsToRedeem(points) {
+            document.getElementById('pointsToRedeem').value = points;
+        }
+        $(document).ready(function () {
+            {% if messages %}
+            $('#alertModal').modal('show');
+            {% endif %}
+
+            $('#alertModal').on('hidden.bs.modal', function () {
+                $(this).find('.modal-body').empty();
+            });
+        });
+    </script>
+    </script>
+</body>
+</html>
+{% endblock content %}

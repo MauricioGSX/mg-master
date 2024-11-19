@@ -1,0 +1,172 @@
+{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caledario de Agenda</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static "css/receptionist_base.css" %}">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-secondary w-100">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <a href="{% url 'logout' %}" class="btn btn-danger">
+                <i class="fas fa-arrow-left"></i> Cerrar sesión
+            </a>
+
+            <div>
+                <img src="{% static 'images/logo.png' %}" alt="Logo" style="height: 35px;" class="me-2">
+            </div>
+            <div>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <div class="ms-auto">
+                        <a href="{% url 'list_mechanics' %}" class="btn btn-primary me-2" data-bs-toggle="modal"
+                            data-bs-target="#registerVehicleModal">Gestionar Mecanicos</a>
+                        <a href="{% url 'profile' %}" class="btn btn-warning">Mi Perfil</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container px-0 py-0">
+        <div class="row calendar-header mt-4">
+            <div class="col-md-4">
+                <h2 id="calendar-month"></h2>
+            </div>
+            <div class="col-md-8 d-flex justify-content-end">
+                <button id="currentWeekBtn" class="btn btn-light">Hoy</button>
+                <button id="prevWeekBtn" class="btn btn-light">&lt;</button>
+                <button id="nextWeekBtn" class="btn btn-light">&gt;</button>
+            </div>
+        </div>
+        <div id="calendar" class="calendar">
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        let currentWeekStart;
+        let vehicleAgenda = {};
+
+        const appointments = JSON.parse('{{ appointments_json|escapejs }}');
+        appointments.forEach(function (appointment) {
+            if (!vehicleAgenda[appointment.date]) {
+                vehicleAgenda[appointment.date] = [];
+            }
+            vehicleAgenda[appointment.date].push({
+                time: appointment.time,
+                vehicle: appointment.vehicle,
+                id: appointment.id,
+                status: appointment.status
+            });
+        });
+
+        console.log(vehicleAgenda); 
+
+        $(document).ready(function () {
+            $('#currentWeekBtn').on('click', function () {
+                const today = new Date();
+                generateCalendar(today);
+            });
+
+            $('#prevWeekBtn').on('click', function () {
+                const previousWeekStart = new Date(currentWeekStart);
+                previousWeekStart.setDate(previousWeekStart.getDate() - 7);
+                generateCalendar(previousWeekStart);
+            });
+
+            $('#nextWeekBtn').on('click', function () {
+                const nextWeekStart = new Date(currentWeekStart);
+                nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+                generateCalendar(nextWeekStart);
+            });
+
+            function generateCalendar(startDate) {
+                const daysContainer = $('#calendar');
+                daysContainer.empty();
+                currentWeekStart = new Date(startDate);
+                const dayOfWeek = currentWeekStart.getDay();
+                const diffToMonday = (dayOfWeek === 0) ? -6 : 1 - dayOfWeek;
+                currentWeekStart.setDate(currentWeekStart.getDate() + diffToMonday);
+
+                for (let i = 0; i < 6; i++) {
+                    const dayElement = $('<div>').addClass('day');
+                    const dayDate = new Date(currentWeekStart);
+                    dayDate.setDate(currentWeekStart.getDate() + i);
+                    const dayKey = dayDate.toLocaleDateString('en-GB'); 
+                    console.log("Día clave (dayKey):", dayKey);
+
+                    dayElement.append($('<h5>').text(dayDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' })));
+                    const amSlot = $('<div>').addClass('time-slot').text('12:00 AM');
+                    dayElement.append(amSlot);
+
+                    if (vehicleAgenda[dayKey]) {
+                        console.log("Citas encontradas para", dayKey, vehicleAgenda[dayKey]);
+
+                        vehicleAgenda[dayKey].forEach(item => {
+                            if (item.time === 'AM') {
+                                const agendaLink = $('<div>')
+                                    .addClass('agenda-item')
+                                    .text(item.vehicle)
+                                    .css('cursor', 'pointer')
+                                    .css('background-color', getStatusColor(item.status))
+                                    .on('click', function () {
+                                        window.location.href = `../details/${item.id}`;
+                                    });
+                                amSlot.append(agendaLink);
+                            }
+                        });
+                    }
+                    const pmSlot = $('<div>').addClass('time-slot').text('12:00 PM');
+                    dayElement.append(pmSlot);
+
+                    if (vehicleAgenda[dayKey]) {
+                        vehicleAgenda[dayKey].forEach(item => {
+                            if (item.time === 'PM') {
+                                const agendaLink = $('<div>')
+                                    .addClass('agenda-item')
+                                    .text(item.vehicle)
+                                    .css('cursor', 'pointer')
+                                    .css('background-color', getStatusColor(item.status))
+                                    .on('click', function () {
+                                        window.location.href = `../details/${item.id}`;
+                                    });
+                                pmSlot.append(agendaLink);
+                            }
+                        });
+                    }
+
+                    daysContainer.append(dayElement);
+                }
+
+                $('#calendar-month').text(`${currentWeekStart.toLocaleString('es-CL', { month: 'long', year: 'numeric' }).replace(/^\w/, (c) => c.toUpperCase())}`);
+            }
+
+            function getStatusColor(status) {
+                switch (status) {
+                    case "Pending":
+                        return "#d1e7ff";
+                    case "Received":
+                        return "#c3e6cb";
+                    case "In progress":
+                        return "#ffeeba";
+                    case "Completed":
+                        return "#f8f9fa";
+                    case "Cancelled":
+                        return "#f8d7da";
+                    default:
+                        return "transparent";
+                }
+            }
+
+            const today = new Date();
+            generateCalendar(today);
+        });
+    </script>
+</body>
+</html>
+{% endblock content %}

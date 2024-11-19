@@ -1,0 +1,53 @@
+{% load static %}
+<div id="user-form">
+    <div class="flex justify-center mx-auto w-full sm:w-4/5 md:w-3/5 lg:max-w-screen-lg h-auto rounded bg-gray-50 dark:bg-gray-800">
+        <div class="grid grid-cols-1 pt-1 sm:grid-cols-10 ml-2 p-2">
+            <div class="col-span-8 overflow-hidden rounded-xl sm:bg-gray-50 sm:px-8 sm:shadow">
+                <div class="pt-4">
+                    <h1 class="py-2 text-2xl font-semibold">Configuración de Perfil</h1>
+                    <p class="font- text-slate-600">Recuerda ingresar datos verídicos para una mejor comunicación entre los actores</p>
+                </div>
+                <hr class="mt-4 mb-8">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-4 py-3 alert-{{ message.tags }}" role="alert">
+                    <p class="font-bold">Mensaje informativo</p>
+                    <p class="text-sm">{{ message }}</p>
+                </div>
+                <hr class="mt-4 mb-8">
+                {% endfor %}
+                {% endif %}
+                <div class="flex items-center justify-center flex-col py-4">
+                    <img id="preview-image" src="{% if perfil_usuario.foto_perfil %}{{ perfil_usuario.foto_perfil.url }}{% else %}{% static 'images/profile-svgrepo-com.svg' %}{% endif %}" alt="Avatar" class="w-16 h-16 rounded-full mb-2">
+                    <h5 class="text-lg font-semibold text-gray-900">{{ request.user.first_name }} {{ request.user.last_name }}</h5> 
+                </div>
+                
+                <form method="POST" hx-post="{% url 'update_user' %}" hx-target="#user-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="pt-1">
+                        <p class="py-2 text-xl font-semibold">Nombre</p>
+                        <div class="w-full">
+                            {{ user_form.first_name }}
+                        </div>
+                        <hr class="mt-4 mb-4">
+                        <div class="pt-1">
+                            <p class="py-2 text-xl font-semibold">Apellidos</p>
+                            {{ user_form.last_name }}
+                        </div>
+                        <hr class="mt-4 mb-4">
+                        <div class="pt-1">
+                            <p class="py-2 text-xl font-semibold">Dirección De correo</p>
+                            {{ user_form.email }}
+                        </div>
+                        <hr class="mt-4 mb-8">
+                        <div class="flex justify-center">
+                            <button type="submit" hx-post="{% url 'update_user' %}" hx-trigger="click" class="btn btn-primary bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                Guardar cambios
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
