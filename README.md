@@ -89,7 +89,7 @@ Si tienes alguna pregunta, sugerencia o deseas contribuir al proyecto, no dudes 
 1. **Clonar el repositorio**:
    - Se usa el comando `git clone` para clonar el repositorio desde un repositorio remoto a tu máquina local: 
      ```bash
-     git clone https://url-de-tu-repositorio.git
+     git clone https://github.com/MauricioGSX/mg-master
      ```
 
 2. **Instalar las dependencias**:
