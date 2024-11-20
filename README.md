@@ -87,16 +87,42 @@ Si tienes alguna pregunta, sugerencia o deseas contribuir al proyecto, no dudes 
 ### Paso 1: Clonar el repositorio
 
 1. **Clonar el repositorio**:
-   - Se usa el comando `git clone` para clonar el repositorio desde un repositorio remoto a tu máquina local: 
+   - Se usa el comando `git clone` para clonar el repositorio desde un repositorio remoto a tu máquina local:
      ```bash
      git clone https://github.com/MauricioGSX/mg-master
      ```
 
-2. **Instalar las dependencias**:
-   - Una vez que hayas clonado el repositorio, navega a la carpeta del proyecto y ejecuta el siguiente comando para instalar todas las dependencias listadas en el archivo `requirements.txt`:
+### Paso 2: Construir y levantar el contenedor
+
+1. **Construir y ejecutar el contenedor Docker**:
+   - Una vez que hayas clonado el repositorio, navega al directorio donde se encuentra el archivo `docker-compose.yml` y ejecuta el siguiente comando para construir y ejecutar el contenedor Docker:
      ```bash
-     pip install -r requirements.txt
+     cd /ruta/a/tu/proyecto
+     docker-compose up --build
      ```
+
+### Paso 3: Mover la base de datos (si es necesario)
+
+Si la base de datos `db.sqlite3` ya está dentro del contenedor y necesitas moverla a la raíz del contenedor, sigue estos pasos:
+
+1. **Acceder al contenedor**:
+   - Abre **Docker Desktop** y selecciona el contenedor en ejecución.
+   - Haz clic en **"CLI"** o, alternativamente, accede al contenedor usando el siguiente comando:
+     ```bash
+     docker exec -it <nombre_del_contenedor> /bin/bash
+     ```
+
+2. **Mover el archivo de la base de datos**:
+   - Dentro del contenedor, ejecuta el siguiente comando para mover el archivo `db.sqlite3` desde la carpeta `/app/` a la raíz del contenedor:
+     ```bash
+     mv /app/db.sqlite3 /db.sqlite3
+     ```
+
+### Notas adicionales
+
+- Si deseas detener el contenedor, puedes usar:
+  ```bash
+  docker-compose down
 
 ---
 
