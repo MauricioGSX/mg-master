@@ -15,7 +15,10 @@ SECRET_KEY = "django-insecure-#i_d!umy8j37inlx)&hfnlla#)vr6+=m@hg540x+#m=^g-^93h
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,mg-master.onrender.com")
+        .split(",")
+]
 
 # Use custom user model
 AUTH_USER_MODEL = 'base.CustomUser'
