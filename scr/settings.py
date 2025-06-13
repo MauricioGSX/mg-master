@@ -21,6 +21,10 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://mg-master.onrender.com',
+]
+
 # Use custom user model
 AUTH_USER_MODEL = 'base.CustomUser'
 LOGIN_URL = '/login/'
