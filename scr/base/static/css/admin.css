@@ -1,0 +1,23 @@
+.float-right.d-none.d-sm-inline {
+    display: none !important;
+}
+
+.main-footer {
+    color: rgb(0, 0, 0) !important; 
+}
+
+.main-footer .float-right {
+    color: rgb(0, 0, 0) !important;  
+}
+
+.main-footer strong {
+    color: rgb(0, 0, 0) !important;  
+}
+
+.brand-image.elevation-3 {
+    box-shadow: none !important;
+}
+
+.brand-image {
+    opacity: 1 !important;  
+}

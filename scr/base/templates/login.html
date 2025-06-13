@@ -1,0 +1,27 @@
+{% extends 'design/login.html' %}  
+{% load i18n %} 
+
+{% block content %} 
+<section>
+    <p class="registrarse">{% trans "¿No tienes una cuenta?" %} <a href="{% url 'register' %}" class="button">{% trans "Regístrate" %}</a> </p> <br>
+    <hr>
+    <div class="login">
+        <h1>{% trans "Bienvenido a Gestor de recepción" %}</h1>
+        <p>{% trans "Ingrese sus datos para poder acceder al Sistema de Reserva" %}</p>
+        <br><br>
+        <form method="POST">
+            {% csrf_token %}
+            <p class="text-center">{% trans "Usuario :" %} </p>
+            <div class="input-login">{{form.username}}</div>
+            <p class="text-center">{% trans "Contraseña:" %}</p>
+            {{form.password}} <br>
+            <input class="ingreso" type="submit" value="{% trans 'Ingresar' %}">
+        </form>
+        <p>{% trans "No tiene una cuenta ?" %} <a href="{% url 'register' %}">{% trans "Regístrate" %}</a></p>
+    </div>
+</section>
+<script>
+    document.querySelector('#id_username').setAttribute('placeholder', '{% trans "Ingresar su Usuario" %}');
+    document.querySelector('#id_password').setAttribute('placeholder', '{% trans "Ingresar su Password" %}')
+</script>
+{% endblock content %}

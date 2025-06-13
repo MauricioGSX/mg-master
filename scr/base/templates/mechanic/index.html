@@ -1,0 +1,413 @@
+{% block content %} {% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestion de Mecanicos</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="icon" href="http://127.0.0.1:8000/static/images/favicon.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static "css/mechanic.css" %}" />
+</head>
+
+<body>
+  {% include 'navbar.html' %}
+    
+
+  <div class="container-custom my-5">
+    <div class="card card-table h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-heading">Filtros</h5>
+        <div class="dropdown">
+          <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#addMechanicModal">
+            Agregar Mecánico
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="filter-bar mb-3">
+          <form method="GET" action="" class="w-100 d-flex">
+            <select name="filterBranch" id="filterBranch" class="form-control mr-2" style="flex: 1">
+              <option value="">Seleccionar sucursal</option>
+              {% for branch in branches %}
+              <option value="{{ branch.id }}" {% if branch.id|default:"" == filter_branch %}selected{% endif %}>
+                {{ branch.name }}
+              </option>
+            {% endfor %}            
+            </select>
+            <select name="filterStatus" id="filterStatus" class="form-control mr-2" style="flex: 1">
+              <option value="">Seleccionar estado</option>
+              <option value="Available" {% if filter_status == "Available" %}selected{% endif %}>Disponible</option>
+              <option value="Not available" {% if filter_status|stringformat:"s" == "Not available" %}selected{% endif %}>No disponible</option>
+              <option value="Deleted" {% if filter_status|stringformat:"s" == "Deleted" %}selected{% endif %}>Eliminado</option>              
+            </select>
+            <button type="submit" class="btn btn-primary ml-2">Filtrar</button>
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-table historical-orders">
+      <div class="card-header">
+        <h5 class="card-heading">Lista de Mecanicos</h5>
+      </div>
+      <div class="card-body">
+        <div id="historicalOrdersContainer" class="table-responsive">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th class="text-center">Nombre</th>
+                <th class="text-center">Email</th>
+                <th class="text-center">Teléfono</th>
+                <th class="text-center">Especialidad</th>
+                <th class="text-center">Años de experiencia</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Sucursal</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for mechanic in mechanics %}
+              <tr>
+                <td>{{ mechanic.name }}</td>
+                <td>{{ mechanic.email }}</td>
+                <td>{{ mechanic.phone }}</td>
+                <td>{{ mechanic.get_specialty_display }}</td>
+                <td>{{ mechanic.experience_years }}</td>
+                <td>{{ mechanic.get_status_display }}</td>
+                <td>{{ mechanic.branch.name }}</td>
+                <td class="text-center">
+                  <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editMechanicModal"
+                    data-id="{{ mechanic.id }}">
+                    Editar
+                  </button>
+                  <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteMechanicModal"
+                    data-id="{{ mechanic.id }}">
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="8" class="text-center">
+                  No hay mecánicos disponibles
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <nav aria-label="Page navigation">
+          <ul class="pagination justify-content-center">
+            <li class="page-item {% if not page_obj.has_previous %} disabled {% endif %}">
+              <a class="page-link"
+                href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}&filterBranch={{ filter_branch }}&filterStatus={{ filter_status }}{% endif %}"
+                tabindex="-1">Anterior</a>
+            </li>
+
+            {% for page_num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_num == page_obj.number %} active {% endif %}">
+              <a class="page-link" href="?page={{ page_num }}&filterBranch={{ filter_branch|default:'' }}&filterStatus={{ filter_status|default:'' }}">
+                {{ page_num }}
+              </a>
+            </li>
+          {% endfor %}          
+
+            <li class="page-item {% if not page_obj.has_next %} disabled {% endif %}">
+              <a class="page-link"
+                href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}&filterBranch={{ filter_branch }}&filterStatus={{ filter_status }}{% endif %}">Siguiente</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="addMechanicModal" tabindex="-1" role="dialog" aria-labelledby="addMechanicLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addMechanicLabel">Agregar Mecánico</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="addMechanicForm">
+            <div class="form-group">
+              <label for="newMechanicName">Nombre</label>
+              <input type="text" class="form-control" id="newMechanicName" name="name" required />
+            </div>
+            <div class="form-group">
+              <label for="newMechanicEmail">Email</label>
+              <input type="email" class="form-control" id="newMechanicEmail" name="email" required />
+            </div>
+            <div class="form-group">
+              <label for="newMechanicPhone">Teléfono</label>
+              <input type="text" class="form-control" id="newMechanicPhone" name="phone" required />
+            </div>
+            <div class="form-group">
+              <label for="newMechanicSpecialty">Especialidad</label>
+              <select class="form-control" id="newMechanicSpecialty" name="specialty" required>
+                <option value="Electricista">Electricista</option>
+                <option value="Mecánico">Mecánico</option>
+                <option value="Mecatrónico">Mecatrónico</option>
+                <option value="Lubricador">Lubricador</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="mechanicBranch">Sucursal</label>
+              <select class="form-control" id="mechanicBranch" name="branch" required>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="newMechanicExperience">Años de Experiencia</label>
+              <input type="number" class="form-control" id="newMechanicExperience" name="experience_years" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar Mecánico</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="editMechanicModal" tabindex="-1" role="dialog" aria-labelledby="editMechanicLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editMechanicLabel">Editar Mecánico</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editMechanicForm">
+            <input type="hidden" id="mechanicId" name="mechanicId" />
+            <div class="form-group">
+              <label for="mechanicName">Nombre</label>
+              <input type="text" class="form-control" id="mechanicName" name="name" />
+            </div>
+            <div class="form-group">
+              <label for="mechanicEmail">Email</label>
+              <input type="email" class="form-control" id="mechanicEmail" name="email" />
+            </div>
+            <div class="form-group">
+              <label for="mechanicPhone">Teléfono</label>
+              <input type="text" class="form-control" id="mechanicPhone" name="phone" />
+            </div>
+            <div class="form-group">
+              <label for="mechanicSpecialty">Especialidad</label>
+              <select class="form-control" id="mechanicSpecialty" name="specialty">
+                <option value="Electricista">Electricista</option>
+                <option value="Mecánico">Mecánico</option>
+                <option value="Mecatrónico">Mecatrónico</option>
+                <option value="Lubricador">Lubricador</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="mechanicExperience">Años de Experiencia</label>
+              <input type="number" class="form-control" id="mechanicExperience" name="experience_years" />
+            </div>
+            <div class="form-group">
+              <label for="mechanicStatus">Estado</label>
+              <select class="form-control" id="mechanicStatus" name="status">
+                <option value="Available">Disponible</option>
+                <option value="Not available">No disponible</option>
+                <option value="Deleted">Eliminado</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              Guardar cambios
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="deleteMechanicModal" tabindex="-1" role="dialog" aria-labelledby="deleteMechanicLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteMechanicLabel">
+            Eliminar Mecánico
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que quieres eliminar este mecánico?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteMechanic">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(
+              cookie.substring(name.length + 1)
+            );
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    $("#editMechanicModal").on("show.bs.modal", function (event) {
+      var button = $(event.relatedTarget); 
+      var mechanicId = button.data("id");
+
+      $.ajax({
+        url: "/get-mechanic-details/", 
+        method: "GET",
+        data: { id: mechanicId },
+        success: function (data) {
+          $("#mechanicId").val(data.id);
+          $("#mechanicName").val(data.name);
+          $("#mechanicEmail").val(data.email);
+          $("#mechanicPhone").val(data.phone);
+          $("#mechanicSpecialty").val(data.specialty);
+          $("#mechanicExperience").val(data.experience_years);
+          $("#mechanicStatus").val(data.status);
+          $("#mechanicBranch").val(data.branch); 
+        },
+      });
+    });
+
+    $("#editMechanicForm").on("submit", function (event) {
+      event.preventDefault();
+
+      var formData = $(this).serialize();
+      const csrftoken = getCookie("csrftoken");
+
+      $.ajax({
+        url: "/update-mechanic/", 
+        method: "POST",
+        headers: { "X-CSRFToken": csrftoken },
+        data: formData,
+        success: function (response) {
+          $("#editMechanicModal").modal("hide");
+          location.reload();
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        },
+      });
+    });
+
+    $("#deleteMechanicModal").on("show.bs.modal", function (event) {
+      var button = $(event.relatedTarget); 
+      var mechanicId = button.data("id");
+      $("#confirmDeleteMechanic").data("id", mechanicId);
+    });
+
+    $("#confirmDeleteMechanic").on("click", function () {
+      var mechanicId = $(this).data("id"); 
+      const csrftoken = getCookie("csrftoken");
+      $.ajax({
+        url: "/delete-mechanic/",
+        method: "POST",
+        headers: { "X-CSRFToken": csrftoken },
+        data: { id: mechanicId },
+        success: function (response) {
+          $("#deleteMechanicModal").modal("hide");
+          location.reload();
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        },
+      });
+    });
+
+    $(document).ready(function () {
+
+      $('#addMechanicForm').submit(function (event) {
+        event.preventDefault(); 
+        const csrftoken = getCookie("csrftoken");
+
+        var formData = {
+          name: $('#newMechanicName').val(),
+          email: $('#newMechanicEmail').val(),
+          phone: $('#newMechanicPhone').val(),
+          specialty: $('#newMechanicSpecialty').val(),
+          experience_years: $('#newMechanicExperience').val(),
+          branch: $('#mechanicBranch').val(),
+        };
+
+        $.ajax({
+          url: '/add-mechanic/', 
+          headers: { "X-CSRFToken": csrftoken },
+          method: 'POST',
+          data: formData,
+          success: function (response) {
+
+            $('#addMechanicModal').modal('hide');
+            alert('Mecánico agregado exitosamente');
+            location.reload();
+          },
+          error: function () {
+            alert('Hubo un error en el servidor. Intenta de nuevo más tarde.');
+          },
+        });
+      });
+    });
+
+
+    $(document).ready(function () {
+      $('#addMechanicModal').on('show.bs.modal', function (e) {
+        console.log('El modal se ha abierto');
+
+        $.ajax({
+          url: '/get-branches/',
+          method: 'GET',
+          success: function (data) {
+            console.log(data);
+            const branchSelect = $('#mechanicBranch');
+            branchSelect.empty();
+            branchSelect.append(new Option("Selecciona una sucursal", ""));
+
+            data.forEach(branch => {
+              console.log(`Agregando sucursal: ${branch.name}`);
+              branchSelect.append(new Option(branch.name, branch.id));
+            });
+
+            console.log(branchSelect.html());
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            console.error("Error: ", textStatus, errorThrown);
+            alert('Hubo un error al cargar las sucursales.');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
+{% endblock content %}

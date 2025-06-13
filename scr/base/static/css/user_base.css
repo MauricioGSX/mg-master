@@ -1,0 +1,39 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.sidebar {
+    background-color: #f8f9fa;
+    height: 93vh;
+    overflow-y: auto;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.row {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.col-md-8,
+.col-md-4 {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.btn {
+    margin-bottom: 10px;
+}

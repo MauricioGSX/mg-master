@@ -1,0 +1,89 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <img src="http://127.0.0.1:8000/static/images/logo.png" alt="Logo" height="40px">
+        </a>
+        <!-- Toggle button for mobile navigation -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            
+            {% if user.groups.all.0.name == "User" %}
+                <!-- Desktop navigation options for users -->
+                <ul class="navbar-nav me-auto d-none d-lg-flex">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link fw-bold" data-bs-toggle="modal" data-bs-target="#createAppointmentModal">
+                            Crear Cita
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link fw-bold" data-bs-toggle="modal" data-bs-target="#registerVehicleModal">
+                            Registrar Vehículos
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Mobile navigation options for users -->
+                <ul class="navbar-nav d-lg-none w-100 text-center fs-4">
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="modal" data-bs-target="#createAppointmentModal">
+                            Crear Cita
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="modal" data-bs-target="#registerVehicleModal">
+                            Registrar Vehículos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'profile' %}">Mi Perfil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">Cerrar sesión</a>
+                    </li>
+                </ul>
+
+            {% elif user.groups.all.0.name == "Receptionist" %}
+                <!-- Desktop navigation for receptionists -->
+                <ul class="navbar-nav me-auto d-none d-lg-flex">
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="{% url 'receptionist_menu' %}">
+                            Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="{% url 'list_mechanics' %}">
+                            Gestión de Mecánicos
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Mobile navigation for receptionists -->
+                <ul class="navbar-nav d-lg-none w-100 text-center fs-4">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'receptionist_menu' %}">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'list_mechanics' %}">Gestión de Mecánicos</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'profile' %}">Mi Perfil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">Cerrar sesión</a>
+                    </li>
+                </ul>
+
+            {% endif %}
+
+            <!-- Profile and logout buttons for large screens -->
+            <div class="d-none d-lg-flex align-items-center">
+                <a href="{% url 'profile' %}" class="btn btn-warning me-2">Mi Perfil</a>
+                <a href="{% url 'logout' %}" class="btn btn-danger">Cerrar sesión</a>
+            </div>
+        </div>
+    </div>
+</nav>

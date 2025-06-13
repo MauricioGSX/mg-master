@@ -1,0 +1,676 @@
+{% block content %}
+{% load custom_badge %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Orden</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="http://127.0.0.1:8000/static/images/favicon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static "css/receptiondetails.css" %}">
+</head>
+
+<body>
+    {% include 'navbar.html' %}
+    
+    <div class="container mt-3">
+        <div class="container-flex">
+            <div class="vehicle-container">
+                <div class="info-section">
+                    <img src="{% static 'images/profile-svgrepo-com.svg' %}" class="rounded-circle" alt="Profile Icon">
+                    <div class="info-text">
+                        <h5>{{ client.get_full_name }}</h5>
+                        <small><img src="{% static 'images/phone-calling-svgrepo-com.svg' %}" class="icon"
+                                alt="Phone Icon"> Telefono: (+56) {{ client.userprofile.phone_number }}</small>
+                        <small><img src="{% static 'images/email-svgrepo-com.svg' %}" class="icon" alt="Email Icon"> {{ client.email }}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="vehicle-container">
+                <div class="info-section">
+                    <img src="{% static 'images/car-sport-svgrepo-com.svg' %}" alt="Vehicle Icon">
+                    <div class="info-text">
+                        <h5><img src="{% static 'images/mechanic-tools-svgrepo-com.svg' %}" class="icon"
+                                alt="Status Icon"> {{ vehicle.brand.name }} {{ vehicle.model.name }}</h5>
+                        <small>VIN:: {{ vehicle.vin }} Placa Patente: {{ vehicle.plate }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4 pt-2">
+            <h2 class="h5 mb-0">Reserva Nº {{ appointment.id }}</h2>
+
+        </div>
+
+        <main class="row">
+
+            <div class="col-lg-8 col-md-7 col-sm-12 my-4">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+
+                        <div>Servicios</div> <button type="button" class="btn btn-secondary me-3" data-toggle="modal"
+                            data-target="#addWorkModal">
+                            Agregar Servicio
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-custom table-bordered table-hover table-sm">
+                                <thead class="table-dark text-light">
+                                    <tr>
+                                        <th> Nombre de Trabajo</th>
+                                        <th>Prioridad</th>
+                                        <th>Fecha Inicio</th>
+                                        <th>Fecha Término</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if works %}
+                                    {% for work in works %}
+                                    <tr data-work-id="{{ work.id }}">
+                                        <td>{{ work.description }}</td>
+                                        <td>
+                                            <span class="badge 
+                                    {% if work.get_priority_display == 'Low' %}badge-primary{% elif work.get_priority_display == 'Medium' %}badge-warning{% else %}badge-danger{% endif %} 
+                                    badge-priority" data-priority="{{ work.get_priority_display }}">
+                                                {{ work.get_priority_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ work.start_date }}</td>
+                                        <td>
+                                            <span class="end-date-text">{{ work.end_date }}</span>
+                                            <input type="date" class="form-control end-date-input d-none"
+                                                value="{{ work.end_date }}">
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                    {% if work.get_status_display == 'En progreso' %}badge-info{% elif work.get_status_display == 'Esperando Repuestos' %}badge-warning{% else %}badge-success{% endif %} 
+                                    badge-status" data-status="{{ work.get_status_display }}">
+                                                {{ work.get_status_display }}
+                                            </span>
+
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6">No se encontraron trabajos asociados a esta cita.</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-5 col-sm-12 my-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Detalles de la Cita</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cliente</span>
+                            <span>{{ client.first_name }} {{ client.last_name }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Vehículo</span>
+                            <span>{{ vehicle.brand }} - {{ vehicle.model }} ({{ vehicle.plate }})</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="progress">
+                                <div id="fuel-progress-bar" class="progress-bar" role="progressbar"
+                                    style="width: {{ appointment.fuel_entry }}%;"
+                                    aria-valuenow="{{ appointment.fuel_entry }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Combustible</span>
+                            <span id="fuel-display" onclick="editFuel()" style="cursor: pointer;">{{ appointment.fuel_entry }} %</span>
+                            <input id="fuel-input" type="number" value="{{ appointment.fuel_entry }}"
+                                style="display: none;" onchange="saveFuel()">
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Kilometraje</span>
+                            <span id="mileage-display" onclick="editMileage()" style="cursor: pointer;">{{ appointment.mileage }}</span>
+                            <input id="mileage-input" type="number" value="{{ appointment.mileage }}"
+                                style="display: none;" onchange="saveMileage()">
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Fecha de Cita</span>
+                            <span>{{ appointment.date }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Hora</span>
+                            <span>{{ appointment.get_time_display }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Mecánico Asignado</span>
+                            {% if appointment.mechanic %}
+                            <span>{{ appointment.mechanic.name }}</span>
+                            {% else %}
+                            <span>No Asignado</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Estado</span>
+                            <span class="badge badge-pill text-white {{ appointment.get_status_badge_class }}"
+                                id="status-badge"
+                                onclick="changeStatus({{ appointment.id }}, '{{ appointment.status }}')"
+                                data-current-status="{{ appointment.status }}">
+                                {{ appointment.get_status_display }}
+                            </span>
+
+                        </div>
+
+
+                        <hr>
+                        <div class="checklist-container mb-4">
+                            <h5 class="font-weight-bold text-primary">Checklist:</h5>
+                            <ul class="list-group">
+                                {% if checklist %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center"
+                                    data-checklist-field="jack">
+                                    Gata (Jack)
+                                    <span
+                                        class="badge badge-pill {{ checklist.jack|yesno:'badge-success,badge-danger' }} "
+                                        onclick="updateChecklist('jack')">
+                                        {{ checklist.jack|yesno:"Sí,No" }}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"
+                                    data-checklist-field="documents">
+                                    Documentos
+                                    <span
+                                        class="badge badge-pill {{ checklist.documents|yesno:'badge-success,badge-danger' }}"
+                                        onclick="updateChecklist('documents')">
+                                        {{ checklist.documents|yesno:"Sí,No" }}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"
+                                    data-checklist-field="tools">
+                                    Herramientas (Tools)
+                                    <span
+                                        class="badge badge-pill {{ checklist.tools|yesno:'badge-success,badge-danger' }}"
+                                        onclick="updateChecklist('tools')">
+                                        {{ checklist.tools|yesno:"Sí,No" }}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"
+                                    data-checklist-field="wheel_key">
+                                    Llave de rueda (Wheel key)
+                                    <span
+                                        class="badge badge-pill {{ checklist.wheel_key|yesno:'badge-success,badge-danger' }}"
+                                        onclick="updateChecklist('wheel_key')">
+                                        {{ checklist.wheel_key|yesno:"Sí,No" }}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"
+                                    data-checklist-field="extinguisher">
+                                    Extintor (Extinguisher)
+                                    <span
+                                        class="badge badge-pill {{ checklist.extinguisher|yesno:'badge-success,badge-danger' }}"
+                                        onclick="updateChecklist('extinguisher')">
+                                        {{ checklist.extinguisher|yesno:"Sí,No" }}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"
+                                    data-checklist-field="first_aid_kit">
+                                    Botiquín (First aid kit)
+                                    <span
+                                        class="badge badge-pill {{ checklist.first_aid_kit|yesno:'badge-success,badge-danger' }}"
+                                        onclick="updateChecklist('first_aid_kit')">
+                                        {{ checklist.first_aid_kit|yesno:"Sí,No" }}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"
+                                    data-checklist-field="triangles">
+                                    Triángulos
+                                    <span
+                                        class="badge badge-pill {{ checklist.triangles|yesno:'badge-success,badge-danger' }}"
+                                        onclick="updateChecklist('triangles')">
+                                        {{ checklist.triangles|yesno:"Sí,No" }}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"
+                                    data-checklist-field="spare_tire">
+                                    Neumático de repuesto (Spare tire)
+                                    <span
+                                        class="badge badge-pill {{ checklist.spare_tire|yesno:'badge-success,badge-danger' }}"
+                                        onclick="updateChecklist('spare_tire')">
+                                        {{ checklist.spare_tire|yesno:"Sí,No" }}
+                                    </span>
+                                </li>
+                                {% else %}
+                                <li class="list-group-item text-danger">No hay checklist disponible para esta cita.</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="addWorkModal" tabindex="-1" aria-labelledby="addWorkModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addWorkModalLabel">Agregar Servicio</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form id="addWorkForm" method="post">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="description">Nombre de Trabajo</label>
+                                    <input name="description" class="form-control" id="description" rows="3"
+                                        required></input>
+                                </div>
+                                <input type="hidden" name="appointment" id="appointment" value="{{ appointment.id }}">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                                <button type="submit" class="btn btn-primary">Guardar Servicio</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+
+    </div>
+
+
+    </main>
+    </div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Get the appointment ID from the template context
+        const appointmentId = {{ appointment.id }};
+
+        /**
+        * Sends a POST request to update the checklist status for a given field.
+        * Updates the badge appearance based on the new status received from the server.
+        *
+        * @param {string} field - The checklist field to update.
+        */
+        function updateChecklist(field) {
+            const url = `{% url 'update_checklist' appointment.id %}`;
+            const data = { field: field };
+
+            // Locate the corresponding list item and badge element 
+            const listItem = document.querySelector(`li[data-checklist-field="${field}"]`);
+            const badge = listItem ? listItem.querySelector('span.badge') : null;
+            console.log('Sending POST request to URL:', url);
+
+            if (!badge) {
+                console.error('Badge not found for field:', field);
+                return;
+            }
+
+            // Send POST request to update checklist status
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}', 
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error('Failed to update checklist');
+                    }
+                    return response.json(); 
+                })
+                .then(data => {
+                    // Update badge style and text based on server response
+                    console.log('Server response:', data); 
+                    if (data.status !== undefined) {
+                        const newStatus = data.status;
+                        badge.className = `badge badge-pill ${newStatus ? 'badge-success' : 'badge-danger'}`;
+                        badge.textContent = newStatus ? 'Sí' : 'No';
+                    } else {
+                        console.error('Unexpected server response:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during fetch:', error);
+                });
+        }
+        
+        /**
+        * Enables editing mode for the mileage field by hiding the display element
+        * and showing the input field with focus.
+        */
+        function editMileage() {
+            var display = document.getElementById('mileage-display');
+            var input = document.getElementById('mileage-input');
+
+            display.style.display = 'none';
+            input.style.display = 'block';
+            input.focus();
+        }
+
+        
+        /**
+        * Saves the updated mileage value.
+        * Sends it to the server via AJAX and updates the display.
+        */
+        function saveMileage() {
+            var input = document.getElementById('mileage-input');
+            var display = document.getElementById('mileage-display');
+            var newValue = input.value;
+            display.innerText = newValue;
+
+            input.style.display = 'none';
+            display.style.display = 'block';
+
+            console.log('Guardando el kilometraje:', newValue);
+
+            $.ajax({
+                url: '/update_mileage/',
+                method: 'POST',
+                data: { mileage: newValue, appointment_id: appointmentId },
+                success: function (response) {
+                    console.log('Respuesta del servidor (kilometraje):', response);
+                },
+                error: function (error) {
+                    console.error('Error al guardar el kilometraje:', error);
+                }
+            });
+        }
+        
+        /**
+        * Enables editing mode for the fuel level.
+        * Hides the display element and shows the input field with focus.
+        */
+        function editFuel() {
+            var display = document.getElementById('fuel-display');
+            var input = document.getElementById('fuel-input');
+            var progressBar = document.getElementById('fuel-progress-bar');
+
+            display.style.display = 'none';
+            input.style.display = 'block';
+            input.focus();
+        }
+
+        /**
+        * Saves the updated fuel level value.
+        * Updates the display and progress bar visually, and sends the value to the server via AJAX.
+        */
+        function saveFuel() {
+            var input = document.getElementById('fuel-input');
+            var display = document.getElementById('fuel-display');
+            var progressBar = document.getElementById('fuel-progress-bar');
+            var newValue = input.value;
+
+            display.innerText = newValue + ' %';
+            progressBar.style.width = newValue + '%';
+            progressBar.setAttribute('aria-valuenow', newValue);
+
+            input.style.display = 'none';
+            display.style.display = 'block';
+
+            console.log('Guardando el nivel de combustible:', newValue);
+
+            $.ajax({
+                url: '/update_fuel/',
+                method: 'POST',
+                data: { fuel_entry: newValue, appointment_id: appointmentId },
+                success: function (response) {
+                    console.log('Respuesta del servidor (combustible):', response);
+                },
+                error: function (error) {
+                    console.error('Error al guardar el nivel de combustible:', error);
+                }
+            });
+        }
+
+        /**
+        * Cycles through predefined appointment statuses and updates it on the server.
+        * Updates the status badge dynamically upon success.
+        */
+        function changeStatus(appointmentId) {
+            const badge = document.getElementById('status-badge');
+            const currentStatus = badge.getAttribute('data-current-status'); 
+
+            const url = `/appointments/${appointmentId}/change_status/`;
+            const statusOrder = ["Pending", "Received", "In progress", "Completed", "Cancelled"];
+            const nextStatus = statusOrder[(statusOrder.indexOf(currentStatus) + 1) % statusOrder.length];
+            const data = { status: nextStatus };
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',  
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.error); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Data received:', data);
+                    if (data.success) {
+                        badge.textContent = data.new_status_display;
+                        badge.className = `badge badge-pill text-white ${data.new_status_class}`;
+                        badge.setAttribute('data-current-status', data.new_status_display); 
+                    } else {
+                        alert('Error updating status: ' + data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        /**
+        * Converts a date string (YYYY-MM-DD) to Chilean format (DD de <mes> de YYYY).
+        */
+        $(document).ready(function () {
+            function formatDateToChile(dateString) {
+                var partes = dateString.split("-");
+                var dia = partes[2];
+                var mes = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"][parseInt(partes[1]) - 1];
+                var anio = partes[0];
+
+                return `${dia} de ${mes} de ${anio}`;
+            }
+
+            /**
+            * Applies the correct color class to the priority badge based on its data attribute.
+            */
+            function setPriorityBadgeClass($badge) {
+                var priority = $badge.data('priority');
+                $badge.removeClass('badge-primary badge-warning badge-danger');
+                var newClass = priority === "Low" ? "badge-primary" : priority === "Medium" ? "badge-warning" : "badge-danger";
+                $badge.addClass(newClass);
+            }
+
+            /**
+            * Applies the correct color class to the status badge based on its data attribute.
+            */
+            function setStatusBadgeClass($badge) {
+                var status = $badge.data('status');
+                $badge.removeClass('badge-info badge-warning badge-success');
+                var newClass = status === "En progreso" ? "badge-info" : status === "Esperando Repuestos" ? "badge-warning" : "badge-success";
+                $badge.addClass(newClass);
+            }
+
+            // Initialize badges based on their data attributes
+            $('tbody .badge-priority').each(function () {
+                setPriorityBadgeClass($(this));
+            });
+
+            $('tbody .badge-status').each(function () {
+                setStatusBadgeClass($(this));
+            });
+
+            /**
+            * Enable inline editing for end date on click.
+            */
+            $('tbody').on('click', '.end-date-text', function () {
+                var $this = $(this);
+                $this.addClass('d-none'); 
+                $this.siblings('.end-date-input').removeClass('d-none'); 
+            });
+
+            /**
+            * Save new end date via AJAX and update the text display.
+            */
+            $('tbody').on('change', '.end-date-input', function () {
+                var newDate = $(this).val();
+                var formattedDate = formatDateToChile(newDate); 
+                var $text = $(this).siblings('.end-date-text');
+                $text.text(formattedDate).removeClass('d-none'); 
+                $(this).addClass('d-none');
+
+                var workId = $(this).closest('tr').data('work-id'); 
+
+                $.ajax({
+                    url: '/update-work/', 
+                    method: 'POST',
+                    data: {
+                        work_id: workId,
+                        end_date: newDate, 
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val() 
+                    },
+                    success: function (response) {
+                        console.log('Fecha actualizada con éxito');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error al actualizar la fecha:', error);
+                    }
+                });
+            });
+
+            /**
+            * Cycle through priority levels on badge click and update via AJAX.
+            */
+            $('tbody').on('click', '.badge-priority', function () {
+                var priorities = ["Low", "Medium", "High"];
+                var currentPriority = $(this).data('priority');
+                var currentIndex = priorities.indexOf(currentPriority);
+                var newPriority = priorities[(currentIndex + 1) % priorities.length];
+
+                $(this).data('priority', newPriority);
+                $(this).text(newPriority);
+
+                $(this).removeClass('badge-primary badge-warning badge-danger');
+                var newClass = newPriority === "Low" ? "badge-primary" : newPriority === "Medium" ? "badge-warning" : "badge-danger";
+                $(this).addClass(newClass);
+
+                var workId = $(this).closest('tr').data('work-id'); 
+
+                $.ajax({
+                    url: '/update-work/',
+                    method: 'POST',
+                    data: {
+                        work_id: workId,
+                        priority: newPriority,
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
+                    },
+                    success: function (response) {
+                        console.log('Prioridad actualizada con éxito');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error al actualizar la prioridad:', error);
+                    }
+                });
+            });
+
+            /**
+            * Cycle through status options on badge click and update via AJAX.
+            */
+            $('tbody').on('click', '.badge-status', function () {
+                var statuses = ["En progreso", "Esperando Repuestos", "Completado"];
+                var currentStatus = $(this).data('status');
+                var currentIndex = statuses.indexOf(currentStatus);
+                var newStatus = statuses[(currentIndex + 1) % statuses.length];
+
+                $(this).data('status', newStatus);
+                $(this).text(newStatus);
+
+                $(this).removeClass('badge-info badge-warning badge-success');
+                var newClass = newStatus === "En progreso" ? "badge-info" : newStatus === "Esperando Repuestos" ? "badge-warning" : "badge-success";
+                $(this).addClass(newClass);
+
+                var workId = $(this).closest('tr').data('work-id'); 
+
+                $.ajax({
+                    url: '/update-work/',
+                    method: 'POST',
+                    data: {
+                        work_id: workId,
+                        status: newStatus,
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
+                    },
+                    success: function (response) {
+                        console.log('Estado actualizado con éxito');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error al actualizar el estado:', error);
+                    }
+                });
+            });
+        });
+
+        /**
+        * Handles the asynchronous submission of the "Add Work" form.
+        * On success, it hides the modal and reloads the page to reflect changes.
+        */
+        $(document).ready(function () {
+            $('#addWorkForm').submit(function (event) {
+                event.preventDefault();  
+                var formData = $(this).serialize(); 
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "add_work_ajax" %}',
+                    data: formData,
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            $('#addWorkModal').modal('hide');
+                            alert(response.message); 
+                            location.reload(); 
+                        }
+                    },
+                    error: function (xhr) {
+                        var errors = xhr.responseJSON.errors;
+                        for (var field in errors) {
+                            alert(errors[field]); 
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
+{% endblock content %}

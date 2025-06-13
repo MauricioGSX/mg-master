@@ -1,0 +1,83 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# 
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-12-09 20:59-0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\base\templates\login.html:6
+msgid "¿No tienes una cuenta?"
+msgstr "Don't have an account?"
+
+#: .\base\templates\login.html:6 .\base\templates\login.html:20
+msgid "Regístrate"
+msgstr "Register"
+
+#: .\base\templates\login.html:9
+msgid "Bienvenido a Gestor de recepción"
+msgstr "Welcome to Reception Manager"
+
+#: .\base\templates\login.html:10
+msgid "Ingrese sus datos para poder acceder al Sistema de Reserva"
+msgstr "Enter your details to access the Reservation System"
+
+#: .\base\templates\login.html:14
+msgid "Usuario :"
+msgstr "Username:"
+
+#: .\base\templates\login.html:16
+msgid "Contraseña:"
+msgstr "Password:"
+
+#: .\base\templates\login.html:18
+msgid "Ingresar"
+msgstr "Log In"
+
+#: .\base\templates\login.html:20
+msgid "No tiene una cuenta ?"
+msgstr "Don't have an account?"
+
+#: .\base\templates\login.html:24
+msgid "Ingresar su Usuario"
+msgstr "Enter your Username"
+
+#: .\base\templates\login.html:25
+msgid "Ingresar su Password"
+msgstr "Enter your Password"
+
+#: .\base\templates\register.html:5
+msgid "Registrarse"
+msgstr "Register"
+
+#: .\base\templates\register.html:15
+msgid "Registrar"
+msgstr "Register"
+
+#: .\base\templates\register.html:25
+msgid "Ya tiene una cuenta ?"
+msgstr "Already have an account?"
+
+#: .\base\templates\register.html:25
+msgid "Ingresa"
+msgstr "Log In"
+
+#: .\admin.py:42
+msgid "%d elementos han sido marcados como disponibles."
+msgstr "%d items have been marked as available."
+
+#: .\admin.py:44
+msgid "Marcar elementos seleccionados como disponibles"
+msgstr "Mark selected items as available"

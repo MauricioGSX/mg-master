@@ -1,0 +1,28 @@
+{% extends 'design/register.html' %}
+{% load i18n %}  
+{% block content %} 
+<div class="login">
+    <div class="registro-form">
+        <h1>{% trans "Registrarse" %}</h1>
+        <form method="POST">
+            {% csrf_token %}
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                {{ form.errors.as_text }}
+            </div>
+            {% endif %}
+            {{ form.first_name.label_tag }} <br> {{ form.first_name }}<br>
+            {{ form.last_name.label_tag }}<br>  {{ form.last_name }}<br>
+            {{ form.email.label_tag }}<br>  {{ form.email }}<br>
+            {{ form.username.label_tag }}<br>  {{ form.username }}<br>
+            {{ form.password1.label_tag }} <br> {{ form.password1 }}<br>
+            {{ form.password2.label_tag }}<br>  {{ form.password2 }}<br>
+            <input class="ingreso" type="submit" value="{% trans 'Registrar' %}">
+        </form>
+    </div>
+    <p class="registro-redireccion">
+        {% trans "Ya tiene una cuenta ?" %} 
+        <a href="{% url 'login' %}">{% trans "Ingresa" %}</a>
+    </p>
+</div>
+{% endblock content %}

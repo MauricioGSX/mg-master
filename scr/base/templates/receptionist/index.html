@@ -1,0 +1,176 @@
+{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caledario de Agenda</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="http://127.0.0.1:8000/static/images/favicon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static "css/receptionist_base.css" %}">
+</head>
+
+<body>
+    {% include 'navbar.html' %}
+    
+    <div class="container px-0 py-0">
+        <div class="row calendar-header mt-4">
+            <div class="col-md-4">
+                <h2 id="calendar-month"></h2>
+            </div>
+            <div class="col-md-8 d-flex justify-content-end">
+                <button id="currentWeekBtn" class="btn btn-light">Hoy</button>
+                <button id="prevWeekBtn" class="btn btn-light">&lt;</button>
+                <button id="nextWeekBtn" class="btn btn-light">&gt;</button>
+            </div>
+        </div>
+        <div id="calendar" class="calendar">
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Initialize variables to track current week's start and the agenda grouped by date
+    let currentWeekStart;
+    let vehicleAgenda = {};
+
+    // Parse and organize appointment data by date
+    const appointments = JSON.parse('{{ appointments_json|escapejs }}');
+    appointments.forEach(function (appointment) {
+    if (!vehicleAgenda[appointment.date]) {
+        vehicleAgenda[appointment.date] = [];
+    }
+    vehicleAgenda[appointment.date].push({
+        time: appointment.time,
+        vehicle: appointment.vehicle,
+        id: appointment.id,
+        status: appointment.status
+    });
+    });
+
+    console.log(vehicleAgenda); 
+
+    $(document).ready(function () {
+
+        // Set current week view
+        $('#currentWeekBtn').on('click', function () {
+            const today = new Date();
+            generateCalendar(today);
+        });
+
+        // Navigate to previous week
+        $('#prevWeekBtn').on('click', function () {
+            const previousWeekStart = new Date(currentWeekStart);
+            previousWeekStart.setDate(previousWeekStart.getDate() - 7);
+            generateCalendar(previousWeekStart);
+        });
+
+        // Navigate to next week
+        $('#nextWeekBtn').on('click', function () {
+            const nextWeekStart = new Date(currentWeekStart);
+            nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+            generateCalendar(nextWeekStart);
+        });
+
+        // Core function to render the weekly calendar view
+        function generateCalendar(startDate) {
+            const daysContainer = $('#calendar');
+            daysContainer.empty();
+            currentWeekStart = new Date(startDate);
+            const dayOfWeek = currentWeekStart.getDay();
+            const diffToMonday = (dayOfWeek === 0) ? -6 : 1 - dayOfWeek;
+            currentWeekStart.setDate(currentWeekStart.getDate() + diffToMonday);
+
+            for (let i = 0; i < 6; i++) {
+                const dayElement = $('<div>').addClass('day');
+                const dayDate = new Date(currentWeekStart);
+                dayDate.setDate(currentWeekStart.getDate() + i);
+                const dayKey = dayDate.toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
+
+                console.log("Día clave (dayKey):", dayKey);
+
+                // Add day title (localized)
+                dayElement.append($('<h5>').text(dayDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' })));
+                
+                // AM Slot
+                const amSlot = $('<div>').addClass('time-slot').text('12:00 AM');
+                dayElement.append(amSlot);
+
+                if (vehicleAgenda[dayKey]) {
+                    console.log("Citas encontradas para", dayKey, vehicleAgenda[dayKey]);
+
+                    vehicleAgenda[dayKey].forEach(item => {
+                        if (item.time === 'AM') {
+                            const agendaLink = $('<div>')
+                                .addClass('agenda-item')
+                                .text(item.vehicle)
+                                .css('cursor', 'pointer')
+                                .css('background-color', getStatusColor(item.status))
+                                .on('click', function () {
+                                    window.location.href = `../details/${item.id}`;
+                                });
+                            amSlot.append(agendaLink);
+                        }
+                    });
+                }
+
+                // PM Slot  
+                const pmSlot = $('<div>').addClass('time-slot').text('12:00 PM');
+                dayElement.append(pmSlot);
+
+                if (vehicleAgenda[dayKey]) {
+                    vehicleAgenda[dayKey].forEach(item => {
+                        if (item.time === 'PM') {
+                            const agendaLink = $('<div>')
+                                .addClass('agenda-item')
+                                .text(item.vehicle)
+                                .css('cursor', 'pointer')
+                                .css('background-color', getStatusColor(item.status))
+                                .on('click', function () {
+                                    window.location.href = `../details/${item.id}`;
+                                });
+                            pmSlot.append(agendaLink);
+                        }
+                    });
+                }
+
+                daysContainer.append(dayElement);
+            }
+
+        // Set the month and year in the header 
+        $('#calendar-month').text(`${currentWeekStart.toLocaleString('es-CL', { month: 'long', year: 'numeric' }).replace(/^\w/, (c) => c.toUpperCase())}`);
+        }
+
+        // Return color based on appointment status
+        function getStatusColor(status) {
+            switch (status) {
+                case "Pending":
+                    return "#d1e7ff";
+                case "Received":
+                    return "#c3e6cb";
+                case "In progress":
+                    return "#ffeeba";
+                case "Completed":
+                    return "#f8f9fa";
+                case "Cancelled":
+                    return "#f8d7da";
+                default:
+                    return "transparent";
+            }
+        }
+
+        // Initialize calendar on page load
+        const today = new Date();
+        generateCalendar(today);
+    });
+    </script>
+</body>
+</html>
+{% endblock content %}

@@ -1,0 +1,47 @@
+body {
+    background-color: #f8f9fa;
+}
+
+h2 {
+    font-weight: 600;
+    color: #333;
+    padding: 15px 0;
+    text-align: center;
+}
+
+.card-table {
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+}
+
+.card-heading {
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.container-custom {
+    width: 80%;
+    margin: 0 auto;
+}
+
+.filter-bar {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 0.25rem;
+}
+
+.pagination {
+    justify-content: center;
+}
+
+.historical-orders {
+    margin-top: 20px;
+}
+
+td {
+    text-align: center;
+}
+
+.thead tr th {
+    text-align: center;
+}
