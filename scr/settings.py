@@ -16,8 +16,9 @@ SECRET_KEY = "django-insecure-#i_d!umy8j37inlx)&hfnlla#)vr6+=m@hg540x+#m=^g-^93h
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,mg-master.onrender.com")
-        .split(",")
+    'mg-master.onrender.com',
+    'localhost',
+    '127.0.0.1',
 ]
 
 # Use custom user model
@@ -88,6 +89,7 @@ JAZZMIN_UI_TWEAKS = {
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
+    "https://mg-master.onrender.com",
 ]
 
 MIDDLEWARE = [
