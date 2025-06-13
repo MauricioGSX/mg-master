@@ -1,4 +1,4 @@
-# MG Master V1.0
+# MG Master V1.5
 
 ### SISTEMA DE GESTIÓN PARA RESERVAS
 El sistema MG Master ha sido desarrollado con fines exclusivamente educativos y de aprendizaje. Todos los mensajes de depuración se han mantenido por esta misma razón. Se prohíbe su distribución o venta. Si tiene alguna sugerencia o idea que pueda contribuir al proyecto, no dude en ponerse en contacto con nosotros.
