@@ -1,6 +1,6 @@
 # MG Master V1.5
 
-### SISTEMA DE GESTIÓN PARA RESERVAS
+### SISTEMA DE GESTIÓN PARA RESERVAS (https://mg-master.onrender.com)
 El sistema MG Master ha sido desarrollado con fines exclusivamente educativos y de aprendizaje. Todos los mensajes de depuración se han mantenido por esta misma razón. Se prohíbe su distribución o venta. Si tiene alguna sugerencia o idea que pueda contribuir al proyecto, no dude en ponerse en contacto con nosotros.
 
 ### USUARIOS DE PRUEBA
@@ -10,6 +10,16 @@ El sistema MG Master ha sido desarrollado con fines exclusivamente educativos y 
 - **Rol Recepcionista**:
   - Username: `recepcionista`
   - Contraseña: `contraseña123`
+
+## **Vista de imágenes**
+
+<div style="display: flex; gap: 10px;">
+  <a href="https://i.ibb.co/5Mcd03V/5.png" target="_blank"><img src="https://i.ibb.co/5Mcd03V/5.png" width="100" height="100"></a>
+  <a href="https://i.ibb.co/PjtjMcN/4.png" target="_blank"><img src="https://i.ibb.co/PjtjMcN/4.png" width="100" height="100"></a>
+  <a href="https://i.ibb.co/PNMXrrx/3.png" target="_blank"><img src="https://i.ibb.co/PNMXrrx/3.png" width="100" height="100"></a>
+  <a href="https://i.ibb.co/gjnZT1c/2.png" target="_blank"><img src="https://i.ibb.co/gjnZT1c/2.png" width="100" height="100"></a>
+  <a href="https://i.ibb.co/Zz8YT2T/1.png" target="_blank"><img src="https://i.ibb.co/Zz8YT2T/1.png" width="100" height="100"></a>
+</div>
 
 ## Índice
 
@@ -153,17 +163,6 @@ Si la base de datos `db.sqlite3` ya está dentro del contenedor y necesitas move
 
 ---
 
-## **Vista de imágenes**
-
-<div style="display: flex; gap: 10px;">
-  <a href="https://i.ibb.co/5Mcd03V/5.png" target="_blank"><img src="https://i.ibb.co/5Mcd03V/5.png" width="100" height="100"></a>
-  <a href="https://i.ibb.co/PjtjMcN/4.png" target="_blank"><img src="https://i.ibb.co/PjtjMcN/4.png" width="100" height="100"></a>
-  <a href="https://i.ibb.co/PNMXrrx/3.png" target="_blank"><img src="https://i.ibb.co/PNMXrrx/3.png" width="100" height="100"></a>
-  <a href="https://i.ibb.co/gjnZT1c/2.png" target="_blank"><img src="https://i.ibb.co/gjnZT1c/2.png" width="100" height="100"></a>
-  <a href="https://i.ibb.co/Zz8YT2T/1.png" target="_blank"><img src="https://i.ibb.co/Zz8YT2T/1.png" width="100" height="100"></a>
-</div>
-
----
 ## **Licencia**
 
 Este proyecto está bajo la licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
