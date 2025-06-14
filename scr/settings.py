@@ -108,8 +108,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
-    'middleware.GeoLanguageMiddleware',
-    'middleware.AdminLoginRequiredMiddleware',
+
 ]
 
 STATIC_URL = '/static/'
