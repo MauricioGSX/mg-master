@@ -22,32 +22,33 @@
     </div>
 </section>
 
-<div class="modal fade" id="credencialesModal" tabindex="-1" aria-labelledby="credencialesLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="credencialesLabel">{% trans "Usuarios de Prueba" %}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <div class="modal-body">
-        <strong>{% trans "Rol Usuario:" %}</strong><br>
-        Username: <code>Demo</code><br>
-        Contraseña: <code>demo123456</code><br><br>
+<div class="modal-overlay" id="customModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>{% trans "Usuarios de Prueba" %}</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <strong>{% trans "Rol Usuario:" %}</strong><br>
+      Username: <code>Demo</code><br>
+      Contraseña: <code>demo123456</code><br><br>
 
-        <strong>{% trans "Rol Recepcionista:" %}</strong><br>
-        Username: <code>Recepcionista</code><br>
-        Contraseña: <code>Recep123</code>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{% trans "Entendido" %}</button>
-      </div>
+      <strong>{% trans "Rol Recepcionista:" %}</strong><br>
+      Username: <code>Recepcionista</code><br>
+      Contraseña: <code>Recep123</code>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ok" onclick="closeModal()">{% trans "Entendido" %}</button>
     </div>
   </div>
 </div>
 <script>
+   function closeModal() {
+        document.getElementById('customModal').style.display = 'none';
+    }
     window.addEventListener('load', function () {
-        const modal = new bootstrap.Modal(document.getElementById('credencialesModal'));
-        modal.show();
+        document.getElementById('customModal').style.display = 'flex';
+
 
         document.querySelector('#id_username').setAttribute('placeholder', '{% trans "Ingresar su Usuario" %}');
         document.querySelector('#id_password').setAttribute('placeholder', '{% trans "Ingresar su Password" %}');
