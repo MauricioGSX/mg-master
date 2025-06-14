@@ -9,14 +9,31 @@
         <h1>{% trans "Bienvenido a Gestor de recepción" %}</h1>
         <p>{% trans "Ingrese sus datos para poder acceder al Sistema de Reserva" %}</p>
         <br><br>
-        <form method="POST">
-            {% csrf_token %}
-            <p class="text-center">{% trans "Usuario :" %} </p>
-            <div class="input-login">{{form.username}}</div>
-            <p class="text-center">{% trans "Contraseña:" %}</p>
-            {{form.password}} <br>
-            <input class="ingreso" type="submit" value="{% trans 'Ingresar' %}">
-        </form>
+       <form method="POST">
+    {% csrf_token %}
+    
+    {% if form.errors %}
+      <div class="error-messages" style="color:red;">
+        <ul>
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    
+    <p class="text-center">{% trans "Usuario :" %} </p>
+    <div class="input-login">{{form.username}}</div>
+    <p class="text-center">{% trans "Contraseña:" %}</p>
+    {{form.password}} <br>
+    <input class="ingreso" type="submit" value="{% trans 'Ingresar' %}">
+</form>
+
         <p>{% trans "No tiene una cuenta ?" %} <a href="{% url 'register' %}">{% trans "Regístrate" %}</a></p>
     </div>
 </section>
