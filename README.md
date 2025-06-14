@@ -5,11 +5,11 @@ El sistema MG Master ha sido desarrollado con fines exclusivamente educativos y 
 
 ### USUARIOS DE PRUEBA
 - **Rol Usuario**:
-  - Username: `usuario`
-  - Contraseña: `contraseña123`
+  - Username: `Demo`
+  - Contraseña: `demo123456`
 - **Rol Recepcionista**:
-  - Username: `recepcionista`
-  - Contraseña: `contraseña123`
+  - Username: `Recepcionista`
+  - Contraseña: `Recep123`
 
 ## **Vista de imágenes**
 
