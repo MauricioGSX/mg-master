@@ -194,23 +194,15 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'console': {
-            'level': 'INFO',  # Adjust the level to DEBUG for more detailed logs
             'class': 'logging.StreamHandler',
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',  # Change to DEBUG for more detailed logs during development
-            'propagate': True,
-        },
-        '': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
     },
 }
+
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
