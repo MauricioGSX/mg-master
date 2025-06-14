@@ -18,12 +18,14 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'mg-master.onrender.com',
     'localhost',
-    '127.0.0.1',
+    '127.0.0.1'
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://mg-master.onrender.com',
+    'https://mg-master.onrender.com'
 ]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Use custom user model
 AUTH_USER_MODEL = 'base.CustomUser'
